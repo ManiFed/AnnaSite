@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>the goat</title>
+<style>
+  :root {
+    --bg-top: #cfe8ff;
+    --bg-bottom: #eef6ff;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: radial-gradient(circle at 50% 30%, var(--bg-top), var(--bg-bottom) 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    cursor: default;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1200px;
+  }
+
+  .goat-wrap {
+    position: relative;
+    width: min(60vw, 520px);
+    will-change: transform;
+    transform-style: preserve-3d;
+  }
+
+  .goat-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    object-fit: cover;
+    aspect-ratio: 1 / 1;
+    object-position: 50% 42%;
+    box-shadow:
+      0 30px 60px -20px rgba(20, 40, 70, 0.35),
+      0 10px 25px -10px rgba(20, 40, 70, 0.25);
+    filter: saturate(1.05) contrast(1.02);
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .shadow {
+    position: absolute;
+    left: 50%;
+    bottom: -6%;
+    width: 70%;
+    height: 8%;
+    background: radial-gradient(ellipse at center, rgba(20,40,70,0.28) 0%, rgba(20,40,70,0) 70%);
+    transform: translateX(-50%);
+    filter: blur(2px);
+    will-change: transform, opacity;
+  }
+
+  footer {
+    position: fixed;
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    color: rgba(30, 45, 70, 0.55);
+    font-weight: 400;
+  }
+
+  footer a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(30, 45, 70, 0.25);
+    padding-bottom: 1px;
+    transition: color 0.25s ease, border-color 0.25s ease;
+  }
+
+  footer a:hover {
+    color: rgba(30, 45, 70, 0.9);
+    border-color: rgba(30, 45, 70, 0.6);
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+    <div class="goat-wrap" id="goatWrap">
+      <div class="shadow" id="goatShadow"></div>
+      <img class="goat-img" src="assets/goat.jpeg" alt="A curious goat" draggable="false" />
+    </div>
+  </div>
+
+  <footer>
+    <a href="mailto:Anna@thegoat.lifestyle">Anna@thegoat.lifestyle</a>
+  </footer>
+
+  <script>
+    const wrap = document.getElementById('goatWrap');
+    const shadow = document.getElementById('goatShadow');
+
+    // Target values driven by pointer position
+    let targetX = 0.5;
+    let targetY = 0.5;
+
+    // Current (smoothed) values that actually get rendered
+    let curX = 0.5;
+    let curY = 0.5;
+
+    const MAX_ROTATE = 26;   // degrees of head turn
+    const MAX_TILT = 16;     // degrees of tilt on the other axis
+    const MAX_TRANSLATE = 22; // px of "leaning toward" cursor
+    const MAX_SCALE = 1.06;
+    const EASE = 0.12;       // lerp factor -> higher = snappier
+
+    function updateTarget(clientX, clientY) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      targetX = clientX / w;
+      targetY = clientY / h;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      updateTarget(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        updateTarget(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    // Gentle idle drift so the goat feels alive even without input
+    let idleT = 0;
+    let hasInteracted = false;
+    window.addEventListener('mousemove', () => { hasInteracted = true; }, { once: true });
+    window.addEventListener('touchstart', () => { hasInteracted = true; }, { once: true });
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function frame() {
+      idleT += 0.012;
+
+      let tx = targetX;
+      let ty = targetY;
+
+      if (!hasInteracted) {
+        // subtle figure-eight idle motion before the user moves the mouse
+        tx = 0.5 + Math.sin(idleT) * 0.12;
+        ty = 0.5 + Math.sin(idleT * 1.7) * 0.06;
+      }
+
+      curX = lerp(curX, tx, EASE);
+      curY = lerp(curY, ty, EASE);
+
+      // normalize to -1..1 from center
+      const nx = (curX - 0.5) * 2;
+      const ny = (curY - 0.5) * 2;
+
+      const rotateY = nx * MAX_ROTATE;        // turning head left/right
+      const rotateX = -ny * MAX_TILT;         // tilting up/down
+      const translateX = nx * MAX_TRANSLATE;
+      const translateY = ny * (MAX_TRANSLATE * 0.6);
+      const scale = 1 + Math.abs(nx * ny) * (MAX_SCALE - 1);
+
+      wrap.style.transform =
+        `translate(${translateX}px, ${translateY}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
+
+      const shadowScale = 1 - Math.abs(nx) * 0.15;
+      const shadowShift = nx * 16;
+      shadow.style.transform = `translateX(calc(-50% + ${shadowShift}px)) scale(${shadowScale}, 1)`;
+      shadow.style.opacity = 0.9 - Math.abs(ny) * 0.3;
+
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  </script>
+
+</body>
+</html>
