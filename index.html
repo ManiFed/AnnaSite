@@ -51,34 +51,35 @@
   }
 
   .cloud-layer.back {
-    animation: drift 150s linear infinite;
-    opacity: 0.55;
-    filter: blur(3px);
+    animation: drift 220s linear infinite;
+    opacity: 0.5;
+    filter: blur(5px);
   }
 
   .cloud-layer.mid {
-    animation: drift 95s linear infinite;
-    opacity: 0.75;
-    filter: blur(1.5px);
+    animation: drift 140s linear infinite;
+    opacity: 0.72;
+    filter: blur(2.5px);
   }
 
   .cloud-layer.front {
-    animation: drift 60s linear infinite;
-    opacity: 0.9;
+    animation: drift 85s linear infinite;
+    opacity: 0.95;
+    filter: blur(0.5px);
   }
 
   .cloud {
     position: absolute;
-    background: #ffffff;
     border-radius: 50%;
-  }
-
-  .cloud::before,
-  .cloud::after {
-    content: "";
-    position: absolute;
-    background: #ffffff;
-    border-radius: 50%;
+    /* several soft, irregular puffs layered together read as a real
+       cumulus cloud instead of a hard cartoon blob; a faint cool-grey
+       gradient near the base gives it volume/underside shading */
+    background:
+      radial-gradient(ellipse 42% 55% at 22% 70%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 72%),
+      radial-gradient(ellipse 38% 60% at 46% 35%, rgba(255,255,255,1)   0%, rgba(255,255,255,0) 74%),
+      radial-gradient(ellipse 46% 62% at 70% 55%, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0) 72%),
+      radial-gradient(ellipse 30% 45% at 88% 68%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 75%),
+      radial-gradient(ellipse 60% 40% at 50% 78%, rgba(200,213,230,0.55) 0%, rgba(200,213,230,0) 80%);
   }
 
   @keyframes drift {
@@ -108,29 +109,18 @@
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 50%;
-    object-fit: cover;
-    aspect-ratio: 1 / 1;
-    object-position: 50% 42%;
-    box-shadow:
-      0 30px 60px -20px rgba(20, 40, 70, 0.35),
-      0 10px 25px -10px rgba(20, 40, 70, 0.25);
-    filter: saturate(1.05) contrast(1.02);
+    filter:
+      saturate(1.05) contrast(1.02)
+      drop-shadow(0 22px 28px rgba(20, 40, 70, 0.32))
+      drop-shadow(0 8px 12px rgba(20, 40, 70, 0.2));
     pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
-  }
-
-  .shadow {
-    position: absolute;
-    left: 50%;
-    bottom: -6%;
-    width: 70%;
-    height: 8%;
-    background: radial-gradient(ellipse at center, rgba(20,40,70,0.28) 0%, rgba(20,40,70,0) 70%);
-    transform: translateX(-50%);
-    filter: blur(2px);
-    will-change: transform, opacity;
+    /* the source photo is cropped with a hard straight edge at the
+       shoulders; fade it out over the bottom ~14% so it dissolves
+       into the page instead of showing a visible cut line */
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 86%, transparent 99%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 86%, transparent 99%);
   }
 
   footer {
@@ -158,19 +148,9 @@
     border-color: rgba(30, 45, 70, 0.6);
   }
 
-  /* cloud shapes: each is a squashed blob built from a base circle
-     plus two overlapping pseudo-circles so it reads as a cloud silhouette */
-  .cloud { width: 140px; height: 46px; }
-  .cloud::before { width: 80px; height: 80px; top: -40px; left: 18px; }
-  .cloud::after  { width: 60px; height: 60px; top: -26px; left: 74px; }
-
-  .cloud.small { width: 90px; height: 30px; }
-  .cloud.small::before { width: 52px; height: 52px; top: -26px; left: 10px; }
-  .cloud.small::after  { width: 40px; height: 40px; top: -17px; left: 48px; }
-
-  .cloud.large { width: 200px; height: 64px; }
-  .cloud.large::before { width: 110px; height: 110px; top: -55px; left: 26px; }
-  .cloud.large::after  { width: 84px; height: 84px; top: -36px; left: 106px; }
+  .cloud.small  { width: 130px; height: 70px; }
+  .cloud        { width: 210px; height: 110px; }
+  .cloud.large  { width: 320px; height: 160px; }
 </style>
 </head>
 <body>
@@ -208,8 +188,7 @@
 
   <div class="stage" id="stage">
     <div class="goat-wrap" id="goatWrap">
-      <div class="shadow" id="goatShadow"></div>
-      <img class="goat-img" src="assets/goat.jpeg" alt="A curious goat" draggable="false" />
+      <img class="goat-img" src="assets/goat.png" alt="A curious goat" draggable="false" />
     </div>
   </div>
 
@@ -219,7 +198,6 @@
 
   <script>
     const wrap = document.getElementById('goatWrap');
-    const shadow = document.getElementById('goatShadow');
 
     // Target values driven by pointer position
     let targetX = 0.5;
@@ -289,11 +267,6 @@
 
       wrap.style.transform =
         `translate(${translateX}px, ${translateY}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
-
-      const shadowScale = 1 - Math.abs(nx) * 0.15;
-      const shadowShift = nx * 16;
-      shadow.style.transform = `translateX(calc(-50% + ${shadowShift}px)) scale(${shadowScale}, 1)`;
-      shadow.style.opacity = 0.9 - Math.abs(ny) * 0.3;
 
       requestAnimationFrame(frame);
     }
