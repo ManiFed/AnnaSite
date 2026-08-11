@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>the goat</title>
 <style>
   :root {
@@ -20,6 +20,7 @@
   html, body {
     height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
   }
 
   body {
@@ -30,6 +31,7 @@
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     cursor: default;
     position: relative;
+    touch-action: none;
   }
 
   .sky {
@@ -51,19 +53,19 @@
   }
 
   .cloud-layer.back {
-    animation: drift 220s linear infinite;
+    animation: drift 185s linear infinite;
     opacity: 0.5;
     filter: blur(5px);
   }
 
   .cloud-layer.mid {
-    animation: drift 140s linear infinite;
+    animation: drift 118s linear infinite;
     opacity: 0.72;
     filter: blur(2.5px);
   }
 
   .cloud-layer.front {
-    animation: drift 85s linear infinite;
+    animation: drift 70s linear infinite;
     opacity: 0.95;
     filter: blur(0.5px);
   }
@@ -73,19 +75,32 @@
     border-radius: 50%;
     /* several soft, irregular puffs layered together read as a real
        cumulus cloud instead of a hard cartoon blob; a faint cool-grey
-       gradient near the base gives it volume/underside shading */
+       gradient near the base gives it volume/underside shading; each
+       cloud also bobs gently on its own cycle so the sky doesn't feel
+       like a single mechanical loop */
     background:
       radial-gradient(ellipse 42% 55% at 22% 70%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 72%),
       radial-gradient(ellipse 38% 60% at 46% 35%, rgba(255,255,255,1)   0%, rgba(255,255,255,0) 74%),
       radial-gradient(ellipse 46% 62% at 70% 55%, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0) 72%),
       radial-gradient(ellipse 30% 45% at 88% 68%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 75%),
       radial-gradient(ellipse 60% 40% at 50% 78%, rgba(200,213,230,0.55) 0%, rgba(200,213,230,0) 80%);
+    animation: bob var(--bob-dur, 14s) ease-in-out infinite alternate;
+    animation-delay: var(--bob-delay, 0s);
   }
 
   @keyframes drift {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
   }
+
+  @keyframes bob {
+    from { margin-top: 0; }
+    to   { margin-top: var(--bob-amt, 10px); }
+  }
+
+  .cloud.small  { width: 130px; height: 70px; }
+  .cloud        { width: 210px; height: 110px; }
+  .cloud.large  { width: 320px; height: 160px; }
 
   .stage {
     position: relative;
@@ -95,29 +110,39 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    perspective: 1200px;
   }
 
   .goat-wrap {
     position: relative;
     width: min(60vw, 520px);
-    will-change: transform;
-    transform-style: preserve-3d;
+    aspect-ratio: 557 / 441;
+    perspective: 900px;
   }
 
-  .goat-img {
-    display: block;
+  .goat-layer {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: auto;
+    height: 100%;
     filter: saturate(1.05) contrast(1.02);
     pointer-events: none;
     user-select: none;
     -webkit-user-drag: none;
-    /* the source photo is cropped with a hard straight edge at the
-       shoulders; fade it out over the bottom ~14% so it dissolves
-       into the page instead of showing a visible cut line */
+    backface-visibility: hidden;
+  }
+
+  /* the shoulders/neck stay put; only the head layer above it is
+     driven by the pointer, pivoting from the jaw/neck seam so the
+     two layers stay visually attached as the head turns */
+  .goat-shoulders {
+    transform-origin: 50% 56%;
     -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 86%, transparent 99%);
     mask-image: linear-gradient(to bottom, #000 0%, #000 86%, transparent 99%);
+  }
+
+  .goat-head {
+    transform-origin: 50% 56%;
+    will-change: transform;
   }
 
   footer {
@@ -145,47 +170,48 @@
     border-color: rgba(30, 45, 70, 0.6);
   }
 
-  .cloud.small  { width: 130px; height: 70px; }
-  .cloud        { width: 210px; height: 110px; }
-  .cloud.large  { width: 320px; height: 160px; }
+  @media (prefers-reduced-motion: reduce) {
+    .cloud-layer, .cloud { animation: none; }
+  }
 </style>
 </head>
 <body>
 
   <div class="sky" aria-hidden="true">
     <div class="cloud-layer back">
-      <div class="cloud large" style="left: 4vw; top: 8%;"></div>
-      <div class="cloud" style="left: 34vw; top: 18%;"></div>
-      <div class="cloud small" style="left: 62vw; top: 6%;"></div>
-      <div class="cloud large" style="left: 84vw; top: 22%;"></div>
-      <div class="cloud large" style="left: 104vw; top: 8%;"></div>
-      <div class="cloud" style="left: 134vw; top: 18%;"></div>
-      <div class="cloud small" style="left: 162vw; top: 6%;"></div>
-      <div class="cloud large" style="left: 184vw; top: 22%;"></div>
+      <div class="cloud large" style="left: 4vw; top: 8%; --bob-dur: 17s; --bob-amt: 14px; --bob-delay: -2s;"></div>
+      <div class="cloud" style="left: 34vw; top: 18%; --bob-dur: 13s; --bob-amt: 9px; --bob-delay: -6s;"></div>
+      <div class="cloud small" style="left: 62vw; top: 6%; --bob-dur: 11s; --bob-amt: 7px; --bob-delay: -1s;"></div>
+      <div class="cloud large" style="left: 84vw; top: 22%; --bob-dur: 19s; --bob-amt: 13px; --bob-delay: -9s;"></div>
+      <div class="cloud large" style="left: 104vw; top: 8%; --bob-dur: 17s; --bob-amt: 14px; --bob-delay: -2s;"></div>
+      <div class="cloud" style="left: 134vw; top: 18%; --bob-dur: 13s; --bob-amt: 9px; --bob-delay: -6s;"></div>
+      <div class="cloud small" style="left: 162vw; top: 6%; --bob-dur: 11s; --bob-amt: 7px; --bob-delay: -1s;"></div>
+      <div class="cloud large" style="left: 184vw; top: 22%; --bob-dur: 19s; --bob-amt: 13px; --bob-delay: -9s;"></div>
     </div>
     <div class="cloud-layer mid">
-      <div class="cloud" style="left: 14vw; top: 34%;"></div>
-      <div class="cloud small" style="left: 46vw; top: 46%;"></div>
-      <div class="cloud" style="left: 76vw; top: 30%;"></div>
-      <div class="cloud small" style="left: 96vw; top: 42%;"></div>
-      <div class="cloud" style="left: 114vw; top: 34%;"></div>
-      <div class="cloud small" style="left: 146vw; top: 46%;"></div>
-      <div class="cloud" style="left: 176vw; top: 30%;"></div>
-      <div class="cloud small" style="left: 196vw; top: 42%;"></div>
+      <div class="cloud" style="left: 14vw; top: 34%; --bob-dur: 12s; --bob-amt: 8px; --bob-delay: -3s;"></div>
+      <div class="cloud small" style="left: 46vw; top: 46%; --bob-dur: 10s; --bob-amt: 6px; --bob-delay: -7s;"></div>
+      <div class="cloud" style="left: 76vw; top: 30%; --bob-dur: 15s; --bob-amt: 10px; --bob-delay: -4s;"></div>
+      <div class="cloud small" style="left: 96vw; top: 42%; --bob-dur: 9s; --bob-amt: 6px; --bob-delay: -1s;"></div>
+      <div class="cloud" style="left: 114vw; top: 34%; --bob-dur: 12s; --bob-amt: 8px; --bob-delay: -3s;"></div>
+      <div class="cloud small" style="left: 146vw; top: 46%; --bob-dur: 10s; --bob-amt: 6px; --bob-delay: -7s;"></div>
+      <div class="cloud" style="left: 176vw; top: 30%; --bob-dur: 15s; --bob-amt: 10px; --bob-delay: -4s;"></div>
+      <div class="cloud small" style="left: 196vw; top: 42%; --bob-dur: 9s; --bob-amt: 6px; --bob-delay: -1s;"></div>
     </div>
     <div class="cloud-layer front">
-      <div class="cloud small" style="left: 24vw; top: 58%;"></div>
-      <div class="cloud" style="left: 58vw; top: 65%;"></div>
-      <div class="cloud small" style="left: 90vw; top: 55%;"></div>
-      <div class="cloud small" style="left: 124vw; top: 58%;"></div>
-      <div class="cloud" style="left: 158vw; top: 65%;"></div>
-      <div class="cloud small" style="left: 190vw; top: 55%;"></div>
+      <div class="cloud small" style="left: 24vw; top: 58%; --bob-dur: 8s; --bob-amt: 6px; --bob-delay: -2s;"></div>
+      <div class="cloud" style="left: 58vw; top: 65%; --bob-dur: 11s; --bob-amt: 8px; --bob-delay: -5s;"></div>
+      <div class="cloud small" style="left: 90vw; top: 55%; --bob-dur: 7s; --bob-amt: 5px; --bob-delay: -1s;"></div>
+      <div class="cloud small" style="left: 124vw; top: 58%; --bob-dur: 8s; --bob-amt: 6px; --bob-delay: -2s;"></div>
+      <div class="cloud" style="left: 158vw; top: 65%; --bob-dur: 11s; --bob-amt: 8px; --bob-delay: -5s;"></div>
+      <div class="cloud small" style="left: 190vw; top: 55%; --bob-dur: 7s; --bob-amt: 5px; --bob-delay: -1s;"></div>
     </div>
   </div>
 
   <div class="stage" id="stage">
     <div class="goat-wrap" id="goatWrap">
-      <img class="goat-img" src="assets/goat.png" alt="A curious goat" draggable="false" />
+      <img class="goat-layer goat-shoulders" src="assets/goat-shoulders.png" alt="" draggable="false" />
+      <img class="goat-layer goat-head" id="goatHead" src="assets/goat-head.png" alt="A curious goat" draggable="false" />
     </div>
   </div>
 
@@ -194,7 +220,8 @@
   </footer>
 
   <script>
-    const wrap = document.getElementById('goatWrap');
+    const head = document.getElementById('goatHead');
+    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
     // Target values driven by pointer position
     let targetX = 0.5;
@@ -204,11 +231,14 @@
     let curX = 0.5;
     let curY = 0.5;
 
-    const MAX_ROTATE = 26;   // degrees of head turn
-    const MAX_TILT = 16;     // degrees of tilt on the other axis
-    const MAX_TRANSLATE = 22; // px of "leaning toward" cursor
-    const MAX_SCALE = 1.06;
-    const EASE = 0.12;       // lerp factor -> higher = snappier
+    // Only the head layer moves — amounts are tuned modestly since it
+    // pivots from the neck seam while the shoulders stay fixed, so
+    // large swings would visibly tear away from the body.
+    const MAX_ROTATE = 15;    // degrees of head turn (left/right)
+    const MAX_TILT = 9;       // degrees of tilt (up/down)
+    const MAX_TRANSLATE = 10; // px of "leaning toward" cursor
+    const MAX_SCALE = 1.025;
+    const EASE = isCoarsePointer ? 0.22 : 0.14; // snappier easing on touch feels smoother, less laggy
 
     function updateTarget(clientX, clientY) {
       const w = window.innerWidth;
@@ -221,6 +251,13 @@
       updateTarget(e.clientX, e.clientY);
     });
 
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches.length > 0) {
+        hasInteracted = true;
+        updateTarget(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
     window.addEventListener('touchmove', (e) => {
       if (e.touches && e.touches.length > 0) {
         updateTarget(e.touches[0].clientX, e.touches[0].clientY);
@@ -231,7 +268,6 @@
     let idleT = 0;
     let hasInteracted = false;
     window.addEventListener('mousemove', () => { hasInteracted = true; }, { once: true });
-    window.addEventListener('touchstart', () => { hasInteracted = true; }, { once: true });
 
     function lerp(a, b, t) {
       return a + (b - a) * t;
@@ -262,7 +298,7 @@
       const translateY = ny * (MAX_TRANSLATE * 0.6);
       const scale = 1 + Math.abs(nx * ny) * (MAX_SCALE - 1);
 
-      wrap.style.transform =
+      head.style.transform =
         `translate(${translateX}px, ${translateY}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`;
 
       requestAnimationFrame(frame);
