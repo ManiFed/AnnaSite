@@ -6,8 +6,9 @@
 <title>the goat</title>
 <style>
   :root {
-    --bg-top: #cfe8ff;
-    --bg-bottom: #eef6ff;
+    --bg-top: #4f9eea;
+    --bg-mid: #8ec4f2;
+    --bg-bottom: #dcedfb;
   }
 
   * {
@@ -22,16 +23,72 @@
   }
 
   body {
-    background: radial-gradient(circle at 50% 30%, var(--bg-top), var(--bg-bottom) 70%);
+    background: linear-gradient(to bottom, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     cursor: default;
+    position: relative;
+  }
+
+  .sky {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .cloud-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .cloud-layer.back {
+    animation: drift 150s linear infinite;
+    opacity: 0.55;
+    filter: blur(3px);
+  }
+
+  .cloud-layer.mid {
+    animation: drift 95s linear infinite;
+    opacity: 0.75;
+    filter: blur(1.5px);
+  }
+
+  .cloud-layer.front {
+    animation: drift 60s linear infinite;
+    opacity: 0.9;
+  }
+
+  .cloud {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+  }
+
+  .cloud::before,
+  .cloud::after {
+    content: "";
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+  }
+
+  @keyframes drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
   }
 
   .stage {
     position: relative;
+    z-index: 1;
     width: 100%;
     height: 100%;
     display: flex;
@@ -100,9 +157,54 @@
     color: rgba(30, 45, 70, 0.9);
     border-color: rgba(30, 45, 70, 0.6);
   }
+
+  /* cloud shapes: each is a squashed blob built from a base circle
+     plus two overlapping pseudo-circles so it reads as a cloud silhouette */
+  .cloud { width: 140px; height: 46px; }
+  .cloud::before { width: 80px; height: 80px; top: -40px; left: 18px; }
+  .cloud::after  { width: 60px; height: 60px; top: -26px; left: 74px; }
+
+  .cloud.small { width: 90px; height: 30px; }
+  .cloud.small::before { width: 52px; height: 52px; top: -26px; left: 10px; }
+  .cloud.small::after  { width: 40px; height: 40px; top: -17px; left: 48px; }
+
+  .cloud.large { width: 200px; height: 64px; }
+  .cloud.large::before { width: 110px; height: 110px; top: -55px; left: 26px; }
+  .cloud.large::after  { width: 84px; height: 84px; top: -36px; left: 106px; }
 </style>
 </head>
 <body>
+
+  <div class="sky" aria-hidden="true">
+    <div class="cloud-layer back">
+      <div class="cloud large" style="left: 4vw; top: 8%;"></div>
+      <div class="cloud" style="left: 34vw; top: 18%;"></div>
+      <div class="cloud small" style="left: 62vw; top: 6%;"></div>
+      <div class="cloud large" style="left: 84vw; top: 22%;"></div>
+      <div class="cloud large" style="left: 104vw; top: 8%;"></div>
+      <div class="cloud" style="left: 134vw; top: 18%;"></div>
+      <div class="cloud small" style="left: 162vw; top: 6%;"></div>
+      <div class="cloud large" style="left: 184vw; top: 22%;"></div>
+    </div>
+    <div class="cloud-layer mid">
+      <div class="cloud" style="left: 14vw; top: 34%;"></div>
+      <div class="cloud small" style="left: 46vw; top: 46%;"></div>
+      <div class="cloud" style="left: 76vw; top: 30%;"></div>
+      <div class="cloud small" style="left: 96vw; top: 42%;"></div>
+      <div class="cloud" style="left: 114vw; top: 34%;"></div>
+      <div class="cloud small" style="left: 146vw; top: 46%;"></div>
+      <div class="cloud" style="left: 176vw; top: 30%;"></div>
+      <div class="cloud small" style="left: 196vw; top: 42%;"></div>
+    </div>
+    <div class="cloud-layer front">
+      <div class="cloud small" style="left: 24vw; top: 58%;"></div>
+      <div class="cloud" style="left: 58vw; top: 65%;"></div>
+      <div class="cloud small" style="left: 90vw; top: 55%;"></div>
+      <div class="cloud small" style="left: 124vw; top: 58%;"></div>
+      <div class="cloud" style="left: 158vw; top: 65%;"></div>
+      <div class="cloud small" style="left: 190vw; top: 55%;"></div>
+    </div>
+  </div>
 
   <div class="stage" id="stage">
     <div class="goat-wrap" id="goatWrap">
